@@ -40,17 +40,21 @@ MCP_HOST=0.0.0.0 uv run python -m ci_tools_mcp.server       # http://localhost:8
 
 # 2. terminál
 uv run python -m agent.run r1001 --impl baseline            # egy diagnózis
-uv run python -m eval.run_eval --impl baseline              # vége: „Definition of Done: MÉG NEM – hiányzik: …”
+uv run python -m eval.run_eval --impl baseline              # vége: „Definition of Done (1. szint): MÉG NEM – hiányzik: …”
 ```
 
-### 2. Innen szerepenként – `UTMUTATO.md`
+### 2. Innen szerepenként – a Copilot végigvezet
 
-| Szerep | Lépések | Első parancs |
+Ma az **1. szint** a cél (kb. 1 óra). Minden szerephez kész Copilot-prompt van a `.github/prompts/` alatt:
+VS Code Copilot Chat (Agent mód) → `/mcp`, `/agent`, `/n8n-copilot` vagy `/vv`. A git-munkát (pull, commit, push)
+is a Copilot végzi az `AGENTS.md` szerint. Részletek: [`UTMUTATO.md`](UTMUTATO.md).
+
+| Szerep | Copilot | Kész, ha |
 |---|---|---|
-| **MCP** | 2–3., 6. | `npx @modelcontextprotocol/inspector` (Streamable HTTP, `http://localhost:8000/mcp`), majd `uv run pytest -m "not level2"` |
-| **Agent** | 4., 7. | `uv run python -m agent.run r1006 --impl langgraph` (vagy `smolagents`, `llamaindex`) |
-| **n8n + Copilot** | 5., 8. | http://localhost:5678 → import: `n8n/build-doctor-starter.workflow.json`; agent API: `uv run uvicorn agent.api:app --port 8080 --host 0.0.0.0` |
-| **V&V** | 1., 9. | `uv run python -m eval.run_eval --impl <impl> --repeat 2` |
+| **MCP** | `/mcp` | `uv run pytest -m "not level2"` → 32 passed, pusholva |
+| **Agent** | `/agent` | a saját agent evalja jobb a baseline-nál |
+| **n8n + Copilot** | `/n8n-copilot` | egy szimulált hiba végigmegy az n8n-ben |
+| **V&V** | `/vv` | DoD-táblázat, 2 saját teszt, agent card |
 
 Ha valaki módosítja és pusholja az MCP szervert: `git pull`, majd az 1. terminálban Ctrl+C és újraindítás.
 
@@ -58,8 +62,9 @@ Ha valaki módosítja és pusholja az MCP szervert: `git pull`, majd az 1. termi
 
 ```bash
 uv run pytest -m "not level2"                     # MCP 1. szint (kész: 32 passed)
-uv run pytest                                     # + 2. szint (kész: 41 passed)
-uv run python -m eval.run_eval --impl <impl> --repeat 2   # riport + DoD: eval/results/
+uv run python -m eval.run_eval --impl <impl>      # 1. szint: 6 eset, riport + DoD: eval/results/
+uv run pytest                                     # otthon, 2. szint (kész: 41 passed)
+uv run python -m eval.run_eval --impl <impl> --level 2 --repeat 2   # otthon: 9 eset, szigorúbb DoD
 uv run python scripts/simulate_failure.py r1003   # webhook az n8n-nek, mintha a CI bukott volna
 uv run uvicorn mock_ci.app:app --port 9000        # mock CI Docker nélkül (n8n Docker nélkül: npx n8n)
 ```

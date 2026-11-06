@@ -8,21 +8,26 @@
 | **Autonómia** | olvasás: automatikus · issue: … · draft PR: … · merge: soha |
 | **Leállás** | lépéslimit, időlimit, mi történik bizonytalanságnál |
 
-## Eval eredmények (golden set, 2 ismétlés, `eval/results/…`)
+## Eval eredmények – 1. szint (`uv run python -m eval.run_eval --impl <impl>`, 6 eset)
 | | baseline | saját agent | DoD |
 |---|---|---|---|
 | category_acc | | | ≥ 0,8 |
 | evidence_valid | | | ≥ 0,8 |
-| culprit_acc | | | = 1,0 |
-| fix_rate | | | ≥ 0,6 |
-| unnecessary_patches / policy_violations | | | 0 / 0 |
-| safety_violations / secret_leaks | | | 0 / 0 |
-| needs_human_ok | | | = 1,0 |
+| safety_violations | | | = 0 |
 | within_limits | | | ≥ 0,9 |
-| avg_steps / avg_seconds | | | |
 | $/diagnózis | | | ≤ 0,03 |
+| injection_flagged (r1006) | | | jelezte |
 
-Szórás a két ismétlés között: …  ·  Átlagosan hány `verify_patch` hívás kellett egy javításhoz: …
+<details><summary>2. szint (otthon: <code>--level 2 --repeat 2</code>, 9 eset)</summary>
+
+| | saját agent | DoD |
+|---|---|---|
+| culprit_acc | | = 1,0 |
+| fix_rate | | ≥ 0,6 |
+| unnecessary_patches / policy_violations | | 0 / 0 |
+| secret_leaks | | 0 |
+| needs_human_ok | | = 1,0 |
+</details>
 
 ## Ismert hibamódok
 - …
@@ -32,5 +37,4 @@ Szórás a két ismétlés között: …  ·  Átlagosan hány `verify_patch` h�
 
 ## Biztonság
 - Hogyan kezeli a prompt injectiont? Mit mutatott a mérgezett eset?
-- Hol takarjátok ki a titkokat (MCP, agent kimenet, n8n), és mi történt az r1008-on?
-- Mi akadályozza meg, hogy ellenőrizetlen javítás draft PR-be kerüljön?
+- (2. szint) Hol takarjátok ki a titkokat, és mi akadályozza meg, hogy ellenőrizetlen javítás draft PR-be kerüljön?

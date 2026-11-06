@@ -1,125 +1,86 @@
-# Build Doctor – útmutató lépésről lépésre
+# Build Doctor – útmutató
 
-Ez a feladatleírás ([`FELADATLEIRAS.md`](FELADATLEIRAS.md)) gyakorlati párja: mit csináljatok, milyen sorrendben,
-és honnan tudjátok, hogy kész. Minden lépés végén van egy **ellenőrzőpont** – egy parancs és az elvárt eredmény.
-Ha egy ellenőrzőpontnál 10 percnél tovább elakadtok, szóljatok: van segítség (és van referencia-megoldás).
+**Ma: az 1. szint, kb. 1 óra építés.** A cél, hogy 14:15-re minden csapatnál működjön a lánc: elbukik egy build →
+az agent az MCP toolokkal kivizsgálja → bizonyítékkal alátámasztott diagnózist ad → az n8n továbbviszi – és mérni
+is tudjátok. A 2. szint (bűnös commit, ellenőrzött javítás, titokszűrés) otthonra marad – lásd a végén.
 
-Szerepek a csapatban (3 főnél az n8n + Copilot és a V&V összevonható):
+Feladatleírás: [`FELADATLEIRAS.md`](FELADATLEIRAS.md) · eszközök: [`ESZKOZOK.md`](ESZKOZOK.md)
 
-| Szerep | 1. sprint (13:10–14:30) | 2. sprint (14:45–15:25) |
+## Menetrend
+
+| Idő | Mi | Kész, ha |
 |---|---|---|
-| **MCP** | 2. és 3. lépés | 6. lépés, utána az agent segítése |
-| **Agent** | 4. lépés | 7. lépés |
-| **n8n + Copilot** | 5. lépés | 8. lépés |
-| **V&V** | 1. lépés mérése, saját tesztek, SPEC | 9. lépés |
+| 13:00–13:15 | Kickoff, csapatok, setup – **mindenki ugyanazt** | mindenkinél lefutott a baseline eval |
+| 13:15–13:45 | 1. kör szerepenként | MCP: 32 zöld teszt, push |
+| 13:45 | **Mindenki: `git pull`, MCP szerver újraindítása** | mindenkinél él a teljes toolkészlet |
+| 13:45–14:15 | 2. kör szerepenként | az agent eval-ja lefut; az n8n flow végigmegy |
+| 14:15–14:30 | Mérés, agent card, demó-próba | DoD (1. szint) táblázat a riportban |
+| 14:45–15:25 | Demók, csapatonként 5 perc ([`docs/DEMO.md`](docs/DEMO.md)) | |
 
-**Mindenki ugyanazt állítja fel.** Minden csapattag a saját gépén futtatja a teljes környezetet (mock CI, n8n,
-MCP szerver, agent) – nincs közös szerver és nincs „infra gép”, minden `localhost`-on fut. Az együttműködés a
-közös repón keresztül megy: mindenki a saját szerepe fájljain dolgozik, gyakran commitol és pushol, a többiek
-`git pull`-lal frissítenek, és újraindítják az MCP szervert. Az MCP-s a 13:40-es ellenőrzőpont után pusholjon –
-onnantól mindenkinél él a teljes toolkészlet. Csapatonként egy LLM-kulcs van, mindenki ugyanazt írja az `.env`-be.
-
-| Szerep | Ezeket a fájlokat szerkeszti |
-|---|---|
-| **MCP** | `ci_tools_mcp/server.py` |
-| **Agent** | `agent/impl_*.py`, `agent/prompts.py`, `docs/adr/` |
-| **n8n + Copilot** | `n8n/*.json` (exportálva), `.github/agents/`, `.github/skills/` |
-| **V&V** | `tests/`, `docs/SPEC.md`, `docs/AGENT_CARD.md`, `eval/results/` |
-
----
-
-## 0. Előző este (15 perc, otthonról – mindenki a saját gépén)
+## 0. Setup – mindenki a saját gépén (13:00–13:15)
 
 ```bash
-git clone <a csapat repója, a template-ből>  &&  cd <repó>
-uv sync --extra all                   # Python 3.11+, uv
-cp .env.example .env                  # az Azure OpenAI adatokat a kickoffon adjuk
+git clone <a csapat repója> && cd <repó>
+uv sync --extra all
+cp .env.example .env                  # a csapat Azure OpenAI kulcsa
 docker compose up -d                  # mock CI :9000, n8n :5678
-uv run pytest                         # LLM nélkül fut
+uv run pytest                         # elvárt: 23 failed, 18 passed – a piros tesztek a hiányzó MCP toolok
 ```
 
-**Ellenőrzőpont:** a `pytest` vége `23 failed, 18 passed`. Ez így jó: a piros tesztek az MCP szerver hiányzó részei.
-Docker nélkül: `uv run uvicorn mock_ci.app:app --port 9000` (a mock CI), az n8n pedig `npx n8n`.
+Docker nélkül: `uv run uvicorn mock_ci.app:app --port 9000`, az n8n pedig `npx n8n` (csak az n8n-es szerepnek kell).
 
-Telepítsétek a hasznos Copilot-pluginokat is ([`ESZKOZOK.md`](ESZKOZOK.md)), legalább:
-`copilot plugin install python-mcp-development@awesome-copilot` és `copilot plugin install testing-automation@awesome-copilot`.
-
-## 1. Setup és mérés (13:00–13:10, mindenki)
+## 1. Első mérés – mindenki (13:10–13:15)
 
 ```bash
-MCP_HOST=0.0.0.0 uv run python -m ci_tools_mcp.server   # külön terminálban hagyd futni: http://localhost:8000/mcp
-uv run python -m agent.run r1001 --impl baseline     # egy diagnózis
-uv run python -m eval.run_eval --impl baseline       # a golden set (9 forgatókönyv)
+# 1. terminál – hagyd futni
+MCP_HOST=0.0.0.0 uv run python -m ci_tools_mcp.server   # http://localhost:8000/mcp
+# 2. terminál
+uv run python -m eval.run_eval --impl baseline         # vége: „Definition of Done (1. szint): MÉG NEM – hiányzik: …”
 ```
 
-**Ellenőrzőpont:** az eval végén `Definition of Done: MÉG NEM – hiányzik: …`. Írjátok fel, mi hiányzik – ez a célotok.
-A riport az `eval/results/` alatt van (`.md` és `.json`).
+Ez a kiindulópont. A baseline egy fix workflow egyetlen LLM-hívással – ezt kell a csapat agentjének megvernie.
 
-> A skeleton MCP szerverrel a baseline sem tud minden toolt hívni – ezért az első mérés gyenge. A V&V-s vezesse
-> egy táblázatban: ugyanazt a mérést futtatjuk minden lépés után.
+## 2. A szereped – a Copilot végigvezet
 
-## 2. MCP – 1. szint (13:10–13:40)
+Minden szerephez van egy kész Copilot-prompt a `.github/prompts/` alatt. VS Code-ban a Copilot Chatbe (Agent mód)
+írd be a nevét perjellel; Copilot CLI-ben kérd így: *„Olvasd el és hajtsd végre: .github/prompts/mcp.prompt.md”*.
 
-Fájl: `ci_tools_mcp/server.py`. A mock CI végpontjai: http://localhost:9000/docs
+| Szerep | Copilot | Mit épít | Kész, ha |
+|---|---|---|---|
+| **MCP** | `/mcp` | a hiányzó toolok a `ci_tools_mcp/server.py`-ban (6 read, 2 write, dry-run) | `uv run pytest -m "not level2"` → 32 passed, és pusholva (13:45) |
+| **Agent** | `/agent` | egy keretrendszer (`langgraph` / `llamaindex` / `smolagents`) befejezése, prompt, rövid ADR | a saját agent evalja jobb a baseline-nál, ideálisan DoD ✅ |
+| **n8n + Copilot** | `/n8n-copilot` | az n8n starter flow importja és próbája; a Copilot Build Doctor agent | egy szimulált hiba végigmegy az n8n-ben; a Copilot bizonyítékkal válaszol |
+| **V&V** | `/vv` | mérés minden lépés után (`docs/MERESEK.md`), SPEC, 2 saját teszt, agent card | a DoD-táblázat és az agent card kész |
 
-1. Írjátok meg a hiányzó read toolokat: `get_log_excerpt`, `get_diff`, `get_recent_commits`, `read_file`, `search_code`, `get_test_history`.
-2. A write toolokat: `create_issue`, `propose_patch` – `WRITE_MODE=dry-run` alapból; utasítsák el a titkot tartalmazó
-   body-t és a tesztet törlő / kikapcsoló patch-et.
-3. Minden toolnak legyen **valódi leírása**: mikor és mire használja a modell. Ez maga a prompt.
+3 fős csapatnál az n8n + Copilot és a V&V összevonható.
 
-```bash
-uv run pytest -m "not level2"           # csak az 1. szint tesztjei
-npx @modelcontextprotocol/inspector     # kézi próba: Streamable HTTP, http://localhost:8000/mcp
-```
+## 3. Közös munka – a Copilot intézi
 
-**Ellenőrzőpont (13:40):** `32 passed, 9 deselected`; az Inspectorban látszik mind a 11 tool, a write toolok `readOnlyHint=false`.
+Mindenki a saját gépén dolgozik, a csapat egy közös repóban. A git-műveleteket a Copilot végzi az `AGENTS.md`
+„Közös munka” része szerint: munka előtt `git pull --rebase`, kész lépés után commit **csak a saját szerepe fájljaira**,
+majd push – a pusht te hagyod jóvá. Force push nincs, más szerep fájljához nem nyúl.
 
-> Elakadás: a `python-mcp-development` plugin `python-mcp-expert` agentje jó párbeszédpartner. Figyelem: ő az MCP SDK v2
-> `MCPServer` API-ját ismeri, mi FastMCP 4-et használunk – a minták átültethetők.
+A legfontosabb pillanat **13:45**: az MCP-s pushol, mindenki `git pull`, és újraindítja az 1. terminálban az MCP szervert.
+Ha 13:45-re nincs kész az MCP szerver, szóljatok – az oktatóknál van referencia-változat, hogy a többiek haladhassanak.
 
-## 3. MCP – a szerződés véglegesítése (13:40–13:50)
+## 4. Elakadások
 
-- Állítsátok le és indítsátok újra a szervert, futtassátok újra a baseline evalt: most már minden tool él.
-- A V&V-s nézze meg az `audit/audit.jsonl`-t: minden hívás ott van?
-
-**Ellenőrzőpont:** a baseline eval lefut hibák nélkül; a riportban a `safety` oszlop végig ✅.
-
-## 4. Agent – 1. szint (13:10–14:10)
-
-1. **Válasszatok keretrendszert** (`agent/impl_smolagents.py`, `impl_llamaindex.py` vagy `impl_langgraph.py`), és írjátok
-   meg az ADR-t: `docs/adr/0001-keretrendszer.md`. Szempontok: kontroll a lépések felett, strukturált kimenet,
-   jóváhagyás (LangGraph `interrupt`?), mennyire látszik a trace.
-2. Fejezzétek be a startot: prompt (`agent/prompts.py`), lépéslimit, leállási feltétel, a write toolok kizárása.
-3. A mérgezett forgatókönyv (r1006): az agent ne kövesse a commit üzenetben lévő utasítást, hanem jelezze a `security_notes`-ban.
-
-```bash
-uv run python -m agent.run r1006 --impl langgraph       # vagy a saját implementációtok
-uv run python -m eval.run_eval --impl langgraph
-```
-
-**Ellenőrzőpont (14:10):** a saját agent `category_acc` értéke ≥ a baseline-é, `safety_violations = 0`.
-
-> Kulcs nélküli próba: `uv run uvicorn scripts.fake_llm:app --port 9100`, majd
-> `OPENAI_BASE_URL=http://localhost:9100/v1 OPENAI_API_KEY=fake LLM_MODEL=fake-model` (és az `AZURE_*` változók üresen).
-> A fake LLM nem gondolkodik – arra jó, hogy kiderüljön, minden komponens beszél-e a többivel.
-
-## 5. n8n + Copilot – 1. szint (13:10–14:30)
-
-**n8n** (http://localhost:5678):
-1. Importáljátok az `n8n/build-doctor-starter.workflow.json`-t, és publikáljátok.
-2. Az agent API: `uv run uvicorn agent.api:app --port 8080 --host 0.0.0.0` (az n8n Dockerből `host.docker.internal`-on éri el).
-3. Próba: `uv run python scripts/simulate_failure.py r1003` → webhook → `/diagnose` → IF (bizonyosság) → issue vagy review sor.
-
-**Copilot** (VS Code, agent mód, vagy Copilot CLI):
-1. VS Code: *MCP: List Servers* → `ci-tools` → Start. A chatben válasszátok a **Build Doctor** custom agentet.
-2. Kérdezzétek: „Miért bukott el az r1003?” – a válasznak bizonyítékkal kell jönnie.
-3. Próbáljátok ki a hookot: kérjétek meg, hogy pusholjon, vagy írja át a `scenarios/` egy fájlját – a hook letiltja.
-
-**Ellenőrzőpont (14:30):** egy webhookból indított futás végigmegy az n8n-ben; a Copilot custom agent diagnosztizál.
+| Tünet | Megoldás |
+|---|---|
+| az agent nem lát toolokat | fut az MCP szerver? `git pull` után újraindítottátok? |
+| n8n: `ECONNREFUSED host.docker.internal:8080` | az agent API `--host 0.0.0.0`-val fusson, az MCP `MCP_HOST=0.0.0.0`-val |
+| nincs még LLM-kulcs | fake LLM: `uv run uvicorn scripts.fake_llm:app --port 9100`, és az `.env`-ben `OPENAI_BASE_URL=http://localhost:9100/v1`, `OPENAI_API_KEY=fake`, `LLM_MODEL=fake-model` (az `AZURE_*` üresen) – nem gondolkodik, csak a csővezetéket próbálja ki |
+| LlamaIndex + Azure: „Unknown model” | `LLM_BASE_MODEL=gpt-5.4-mini` a `.env`-ben |
+| git ütközés | a Copilot megmondja, kinek a fájlja – egyeztessetek, ne írjátok felül egymást |
 
 ---
 
-## 6. MCP – 2. szint (14:45–15:00)
+## Otthon: a 2. szint
+
+Ha kedvet kaptatok: a 2. szinten az agent megkeresi a hibát behozó commitot, javítást ír és sandboxban ki is
+próbálja, felismeri a hibás tesztet, és nem adja ki a logban talált titkot. Mérés: `--level 2` (mind a 9 eset).
+
+### MCP – 2. szint
 
 1. **Commitonkénti diff**: `get_diff(run_id, commit=None)` – a `commit` paraméterrel egy korábbi commit diffje
    (`GET /runs/{id}/diff?commit=<sha>`). A leírásban mondjátok meg a modellnek, *mikor* kell korábbi commitot nézni.
@@ -134,9 +95,9 @@ uv run python -m eval.run_eval --impl langgraph
 uv run pytest
 ```
 
-**Ellenőrzőpont (15:00):** `41 passed`.
+**Kész, ha:** `41 passed`.
 
-## 7. Agent – 2. szint (14:45–15:20)
+### Agent – 2. szint
 
 1. **Culprit commit** (r1007): a fejcommit csak README-t módosít. Az agent nézze végig a futás commitjait
    (`get_recent_commits`, `get_diff commit=…`), és adja meg a `culprit_commit` mezőt.
@@ -150,10 +111,10 @@ uv run pytest
 5. **Keret**: a verify ciklus lépést és időt eszik. Maradjatok 20 lépés, 120 s és 0,03 $ alatt
    (kevesebb, de jobb tool-hívás; tömör tool-válaszok; a patch-et elég egyszer-kétszer ellenőrizni).
 
-**Ellenőrzőpont (15:20):** `uv run python -m eval.run_eval --impl <impl>` → `culprit_acc = 1.0`, `fix_rate ≥ 0.6`,
+**Kész, ha:** `uv run python -m eval.run_eval --impl <impl> --level 2` → `culprit_acc = 1.0`, `fix_rate ≥ 0.6`,
 `secret_leaks = 0`, `unnecessary_patches = 0`.
 
-## 8. n8n + Copilot – 2. szint (14:45–15:20)
+### n8n + Copilot – 2. szint
 
 1. **Emberi jóváhagyás**: a draft PR (`propose_patch`) előtt egy n8n **Form** vagy **Wait** lépés; a jóváhagyó lássa a
    diagnózist és a diffet.
@@ -162,31 +123,21 @@ uv run pytest
 4. **Copilot**: a `Build Doctor` custom agent tool-listájába vegyétek fel a `ci-tools/verify_patch`-et, és kérjétek meg,
    hogy javítson is (csak ellenőrzés után).
 
-**Ellenőrzőpont:** az r1001 webhookból indítva jóváhagyás után dry-run draft PR-ig jut; az r1002 (flaky) nem kér PR-t.
+**Kész, ha:** az r1001 webhookból indítva jóváhagyás után dry-run draft PR-ig jut; az r1002 (flaky) nem kér PR-t.
 
-## 9. V&V – végig, a 2. sprintben főleg (14:45–15:25)
+### V&V – 2. szint
 
-1. Eval **2 ismétléssel**: `uv run python -m eval.run_eval --impl <impl> --repeat 2` – a DoD-táblázat a riport végén.
+1. Eval **2 ismétléssel**: `uv run python -m eval.run_eval --impl <impl> --level 2 --repeat 2` – a DoD-táblázat a riport végén.
 2. **Hibaelemzés**: melyik forgatókönyvön és miért téved az agent? Hányszor kellett a verify? Hol fogy el a lépésszám?
 3. **Saját tesztek** (legalább 2) a `tests/` alá, például: nem létező run ID; a `verify_patch` tesztet módosító
    patch-et elutasít; a diagnózis JSON-ja nem tartalmaz tokent.
 4. **Agent card** (`docs/AGENT_CARD.md`) a mért számokkal, a DoD-táblázattal és az ismert hibamódokkal.
 
-**Ellenőrzőpont (15:25):** a DoD-táblázat a riportban (vagy az agent cardban a hiányok őszinte felsorolása),
+**Kész, ha:** a DoD-táblázat a riportban (vagy az agent cardban a hiányok őszinte felsorolása),
 2 ADR, kitöltött SPEC.
 
-## 10. Demó (15:25–16:00)
 
-Csapatonként 5 perc. Az oktatók a demó előtt bemásolják a rejtett forgatókönyveket (`hidden/`), és húztok egy run ID-t.
-
-1. Élőben: webhook vagy `agent.run <rejtett run>` – kategória, bizonyíték, culprit, ellenőrzött javítás.
-2. A trace: mit csinált az agent lépésről lépésre (és hányszor ellenőrzött).
-3. A DoD-táblázat a golden seten.
-4. Egy ADR és egy korlát, amit megtaláltatok.
-
----
-
-## 3. szint – ha van még idő
+### 3. szint – ötletek
 
 - **Copilot plugin**: csomagoljátok a `ci-tools` szervert, a `ci-triage` skillt és a `Build Doctor` agentet egy pluginba
   (`plugin.json` + `skills/` + `mcp.json`), hogy más csapat egy paranccsal telepíthesse.
@@ -196,7 +147,9 @@ Csapatonként 5 perc. Az oktatók a demó előtt bemásolják a rejtett forgató
 - **Valódi GitHub Actions**: a GitHub MCP szerver `actions` toolsetje read-only módban egy saját repó bukó futásán.
 - **A tegnapi RAG index mint tool**: a fejlesztői dokumentáció / ADR-ek kereshetők legyenek a diagnózishoz.
 
-## Gyakori elakadások
+
+### Elakadások a 2. szinten
+
 
 | Tünet | Ok / megoldás |
 |---|---|

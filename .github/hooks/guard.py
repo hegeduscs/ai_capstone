@@ -8,12 +8,13 @@ import re
 import sys
 
 DENY = [
-    (r"git\s+push", "Push csak emberi jóváhagyással, a terminálból."),
+    (r"git\s+push\b.*(?:\s-f\b|--force)", "Force push tilos – a csapat közös repójában mások munkáját írná felül."),
     (r"rm\s+-rf|Remove-Item\s+.*-Recurse", "Rekurzív törlés tiltott."),
     (r"(?:^|[\s/\\\"'])(?:scenarios|eval[/\\]cases)[/\\]", "A forgatókönyveket és a golden setet nem módosíthatja agent."),
     (r"@pytest\.mark\.skip|deleted file mode .*tests/", "Teszt kikapcsolása vagy törlése tiltott."),
 ]
 ASK_TOOLS = ("create_issue", "propose_patch")
+ASK = [(r"git\s+push\b", "Push a csapat közös repójába – nézd át, mit küld fel (csak a saját szereped fájljai?).")]
 
 
 def main():
@@ -27,6 +28,10 @@ def main():
     for rx, reason in DENY:
         if re.search(rx, args):
             print(json.dumps({"permissionDecision": "deny", "permissionDecisionReason": reason}, ensure_ascii=False))
+            return
+    for rx, reason in ASK:
+        if re.search(rx, args):
+            print(json.dumps({"permissionDecision": "ask", "permissionDecisionReason": reason}, ensure_ascii=False))
             return
     if name.endswith(ASK_TOOLS):
         print(json.dumps({"permissionDecision": "ask",
