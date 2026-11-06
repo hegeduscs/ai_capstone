@@ -13,9 +13,22 @@ Szerepek a csapatban (3 főnél az n8n + Copilot és a V&V összevonható):
 | **n8n + Copilot** | 5. lépés | 8. lépés |
 | **V&V** | 1. lépés mérése, saját tesztek, SPEC | 9. lépés |
 
+**Mindenki ugyanazt állítja fel.** Minden csapattag a saját gépén futtatja a teljes környezetet (mock CI, n8n,
+MCP szerver, agent) – nincs közös szerver és nincs „infra gép”, minden `localhost`-on fut. Az együttműködés a
+közös repón keresztül megy: mindenki a saját szerepe fájljain dolgozik, gyakran commitol és pushol, a többiek
+`git pull`-lal frissítenek, és újraindítják az MCP szervert. Az MCP-s a 13:40-es ellenőrzőpont után pusholjon –
+onnantól mindenkinél él a teljes toolkészlet. Csapatonként egy LLM-kulcs van, mindenki ugyanazt írja az `.env`-be.
+
+| Szerep | Ezeket a fájlokat szerkeszti |
+|---|---|
+| **MCP** | `ci_tools_mcp/server.py` |
+| **Agent** | `agent/impl_*.py`, `agent/prompts.py`, `docs/adr/` |
+| **n8n + Copilot** | `n8n/*.json` (exportálva), `.github/agents/`, `.github/skills/` |
+| **V&V** | `tests/`, `docs/SPEC.md`, `docs/AGENT_CARD.md`, `eval/results/` |
+
 ---
 
-## 0. Előző este (15 perc, otthonról)
+## 0. Előző este (15 perc, otthonról – mindenki a saját gépén)
 
 ```bash
 git clone <a csapat repója, a template-ből>  &&  cd <repó>
@@ -34,7 +47,7 @@ Telepítsétek a hasznos Copilot-pluginokat is ([`ESZKOZOK.md`](ESZKOZOK.md)), l
 ## 1. Setup és mérés (13:00–13:10, mindenki)
 
 ```bash
-uv run python -m ci_tools_mcp.server &               # http://localhost:8000/mcp (a skeleton is elindul)
+uv run python -m ci_tools_mcp.server                 # külön terminálban hagyd futni: http://localhost:8000/mcp
 uv run python -m agent.run r1001 --impl baseline     # egy diagnózis
 uv run python -m eval.run_eval --impl baseline       # a golden set (9 forgatókönyv)
 ```
