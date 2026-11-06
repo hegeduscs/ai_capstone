@@ -57,3 +57,15 @@ A csapat egy közös repóban dolgozik, mindenki a saját gépén. A git-művele
    mondd el a felhasználónak, kivel kell egyeztetnie. Soha ne force pusholj, ne írd át más commitját.
 4. **Pull után:** ha a `ci_tools_mcp/` változott, szólj: „Állítsd le és indítsd újra az MCP szervert.”
 5. `.env`, `eval/results/` (kivéve, ha a V&V kéri), `audit/` nem kerül commitba.
+
+## Munkamódszer: subagentek, MCP, skillek, memória
+- **Subagentek** (`.github/agents/`): a fő szál tervez, átnéz, commitol – a munkát kiszervezi:
+  `Doku-kutató` (Context7 / Microsoft Learn, kis modell), `Fejlesztő` (kódolás, közepes modell),
+  `Tesztelő` (pytest, eval, a legkisebb modell). Független feladatokat párhuzamosan indíts; ugyanazt a fájlt két
+  subagent soha ne írja egyszerre. A subagent rövid összefoglalót ad vissza – a fő szál kontextusa tiszta marad.
+- **MCP** (`.vscode/mcp.json`): `ci-tools` (a CI), `context7` (könyvtár-dokumentáció – emlékezetből ne írj API-t),
+  `microsoft-learn` (Azure).
+- **Skillek** (`.github/skills/`): `ci-triage`, `mcp-tool-design`, `agent-prompting`, `n8n-flow`, `eval-measurement` –
+  a szerephez tartozót töltsd be.
+- **Memória:** ez a fájl mindig betöltődik (szabályok). A tanulságokat a repó-memóriába írd
+  (`/memories/repo/<szerep>.md`) – a felhasználó a *Chat: Show Memory Files* paranccsal nézi meg.

@@ -5,8 +5,13 @@
       "url": "http://localhost:8000/mcp"
     },
     "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp"
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "envFile": "${workspaceFolder}/.env.context7"
     },
     "microsoft-learn": {
       "type": "http",

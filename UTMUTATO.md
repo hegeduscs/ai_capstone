@@ -23,6 +23,7 @@ Feladatleírás: [`FELADATLEIRAS.md`](FELADATLEIRAS.md) · eszközök: [`ESZKOZO
 git clone <a csapat repója> && cd <repó>
 uv sync --extra all
 cp .env.example .env                  # a csapat Azure OpenAI kulcsa
+cp .env.context7.example .env.context7   # Context7 kulcs a Copilotnak (üresen is megy)
 docker compose up -d                  # mock CI :9000, n8n :5678
 uv run pytest                         # elvárt: 23 failed, 18 passed – a piros tesztek a hiányzó MCP toolok
 ```
@@ -53,6 +54,21 @@ Minden szerephez van egy kész Copilot-prompt a `.github/prompts/` alatt. VS Cod
 | **V&V** | `/vv` | mérés minden lépés után (`docs/MERESEK.md`), SPEC, 2 saját teszt, agent card | a DoD-táblázat és az agent card kész |
 
 3 fős csapatnál az n8n + Copilot és a V&V összevonható.
+
+## Amit közben a Copilotban megmutatunk
+
+A szerep-promptok így dolgoztatják a Copilotot – figyeljétek a chatben:
+
+| Mi | Hol van | Hol látod |
+|---|---|---|
+| **Subagentek** | `.github/agents/`: `Fejlesztő` (közepes modell), `Tesztelő` (legkisebb modell), `Doku-kutató` | a chatben a subagent-hívások, párhuzamosan is |
+| **MCP** | `.vscode/mcp.json`: `ci-tools`, `context7`, `microsoft-learn` | *MCP: List Servers*; a chatben a tool-hívások |
+| **Skillek** | `.github/skills/`: szerepenként egy + `ci-triage` | a válasz *References* része |
+| **Memória** | `AGENTS.md` (mindig betöltődik) · `/memories/repo/<szerep>.md` (a Copilot írja) | *Chat: Show Memory Files* – a prompt a végén megállít, hogy megnézd |
+
+A subagentek modellje az `.agent.md` fájlok `model:` sorában van. Ha nálatok más modellnevek látszanak a
+modellválasztóban, írjátok át – ha egyik sem elérhető, a subagent a fő szál modelljével fut. A subagent-tool
+(`agent` / runSubagent) a chatben a *Configure Tools* alatt kapcsolható be.
 
 ## 3. Közös munka – a Copilot intézi
 

@@ -28,6 +28,7 @@ utána szerepenként válik szét a munka.
 git clone <a csapat repója> && cd <repó>
 uv sync --extra all                 # Python 3.11+, uv
 cp .env.example .env                # Azure OpenAI kulcs (kulcs nélkül: fake LLM, lent)
+cp .env.context7.example .env.context7   # Context7 kulcs a Copilotnak (üresen is megy)
 docker compose up -d                # mock CI :9000, n8n :5678
 uv run pytest                       # elvárt: 23 failed, 18 passed – a piros tesztek a hiányzó MCP toolok
 ```

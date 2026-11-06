@@ -40,7 +40,7 @@ készültek – a capstone-hoz nem szükségesek.
 |---|---|---|---|
 | **ci-tools** (saját) | `uv run python -m ci_tools_mcp.server` → `http://localhost:8000/mcp` | a feladat maga | ugyanazt használja a ti agentetek, az n8n és a Copilot |
 | **MCP Inspector** (eszköz) | `npx @modelcontextprotocol/inspector` | a toolok kézi kipróbálása, a leírások és annotációk ellenőrzése | Streamable HTTP, `http://localhost:8000/mcp` |
-| **Context7** | `https://mcp.context7.com/mcp` (a `.vscode/mcp.json`-ban) | friss könyvtár-dokumentáció: FastMCP, LangGraph, LlamaIndex, smolagents, n8n | toolok: `resolve-library-id`, `query-docs`; kulcs nélkül is használható, kulccsal nagyobb a keret |
+| **Context7** | `npx -y @upstash/context7-mcp` (a `.vscode/mcp.json`-ban; kulcs: `.env.context7`) | friss könyvtár-dokumentáció: FastMCP, LangGraph, LlamaIndex, smolagents, n8n | toolok: `resolve-library-id`, `query-docs`; kulcs nélkül is használható, kulccsal nagyobb a keret |
 | **Microsoft Learn** | `https://learn.microsoft.com/api/mcp` (a `.vscode/mcp.json`-ban) | Azure OpenAI: deployment, API-verzió, gpt-5.x paraméterek | toolok: `microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search` |
 | **n8n instance-level MCP** | n8n: *Settings → Instance-level MCP → Enable MCP access*; a szerver URL-je `/mcp-server/http`-re végződik | a Copilot workflow-t keres, futtat, szerkeszt (n8n 2.13+) | workflow-onként kell engedélyezni (*Available in MCP*); OAuth vagy API kulcs |
 | **GitHub MCP server** (3. szint) | `--toolsets actions,repos --read-only` | valódi GitHub Actions futások: `actions_list`, `actions_get`, `get_job_logs` | read-only módban a write toolok ki vannak hagyva |
