@@ -47,7 +47,7 @@ Telepítsétek a hasznos Copilot-pluginokat is ([`ESZKOZOK.md`](ESZKOZOK.md)), l
 ## 1. Setup és mérés (13:00–13:10, mindenki)
 
 ```bash
-uv run python -m ci_tools_mcp.server                 # külön terminálban hagyd futni: http://localhost:8000/mcp
+MCP_HOST=0.0.0.0 uv run python -m ci_tools_mcp.server   # külön terminálban hagyd futni: http://localhost:8000/mcp
 uv run python -m agent.run r1001 --impl baseline     # egy diagnózis
 uv run python -m eval.run_eval --impl baseline       # a golden set (9 forgatókönyv)
 ```

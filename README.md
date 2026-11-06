@@ -17,38 +17,57 @@ flowchart LR
   N8N -- "emberi jóváhagyás után<br/>issue / draft PR" --> API
 ```
 
-## Gyors indulás
+## Indulás – mindenki ugyanígy, a saját gépén
+
+A lépésenkénti menetrend ellenőrzőpontokkal: [`UTMUTATO.md`](UTMUTATO.md). Az első két lépés mindenkinél azonos,
+utána szerepenként válik szét a munka.
+
+### 0. Setup (előző este vagy 13:00-kor)
 
 ```bash
-# 0) előfeltételek: Python 3.11+, uv, Docker, VS Code + GitHub Copilot
-uv sync --extra all                 # vagy: --extra langgraph | llamaindex | smolagents
-cp .env.example .env                # LLM kulcsok (Azure OpenAI vagy OpenAI-kompatibilis)
+git clone <a csapat repója> && cd <repó>
+uv sync --extra all                 # Python 3.11+, uv
+cp .env.example .env                # Azure OpenAI kulcs (kulcs nélkül: fake LLM, lent)
+docker compose up -d                # mock CI :9000, n8n :5678
+uv run pytest                       # elvárt: 23 failed, 18 passed – a piros tesztek a hiányzó MCP toolok
+```
 
-# 1) infrastruktúra
-docker compose up -d                # mock-ci :9000, n8n :5678
-#   Docker nélkül:  uv run uvicorn mock_ci.app:app --port 9000
+### 1. Első mérés (13:00–13:10)
 
-# 2) MCP szerver (ezen dolgozik az MCP-s csapattag)
-uv run python -m ci_tools_mcp.server              # http://localhost:8000/mcp
-#   n8n-ből (Dockerből) is elérhető legyen:  MCP_HOST=0.0.0.0 uv run python -m ci_tools_mcp.server
-npx @modelcontextprotocol/inspector              # kézi próba: Streamable HTTP, http://localhost:8000/mcp
+```bash
+# 1. terminál – hagyd futni (a 0.0.0.0 kell, hogy a Dockerben futó n8n is elérje)
+MCP_HOST=0.0.0.0 uv run python -m ci_tools_mcp.server       # http://localhost:8000/mcp
 
-# 3) agent
-uv run python -m agent.run r1001 --impl baseline
-uv run uvicorn agent.api:app --port 8080 --host 0.0.0.0    # az n8n ezt hívja
+# 2. terminál
+uv run python -m agent.run r1001 --impl baseline            # egy diagnózis
+uv run python -m eval.run_eval --impl baseline              # vége: „Definition of Done: MÉG NEM – hiányzik: …”
+```
 
-# 4) tesztek és eval
-uv run pytest -m "not level2"                     # LLM nélkül: mock CI + MCP szerződés, 1. szint
-uv run pytest                                     # + 2. szint (commitonkénti diff, titkok, verify_patch)
-uv run python -m eval.run_eval --impl baseline    # golden set, riport + Definition of Done: eval/results/
+### 2. Innen szerepenként – `UTMUTATO.md`
+
+| Szerep | Lépések | Első parancs |
+|---|---|---|
+| **MCP** | 2–3., 6. | `npx @modelcontextprotocol/inspector` (Streamable HTTP, `http://localhost:8000/mcp`), majd `uv run pytest -m "not level2"` |
+| **Agent** | 4., 7. | `uv run python -m agent.run r1006 --impl langgraph` (vagy `smolagents`, `llamaindex`) |
+| **n8n + Copilot** | 5., 8. | http://localhost:5678 → import: `n8n/build-doctor-starter.workflow.json`; agent API: `uv run uvicorn agent.api:app --port 8080 --host 0.0.0.0` |
+| **V&V** | 1., 9. | `uv run python -m eval.run_eval --impl <impl> --repeat 2` |
+
+Ha valaki módosítja és pusholja az MCP szervert: `git pull`, majd az 1. terminálban Ctrl+C és újraindítás.
+
+### Parancsok – referencia
+
+```bash
+uv run pytest -m "not level2"                     # MCP 1. szint (kész: 32 passed)
+uv run pytest                                     # + 2. szint (kész: 41 passed)
+uv run python -m eval.run_eval --impl <impl> --repeat 2   # riport + DoD: eval/results/
+uv run python scripts/simulate_failure.py r1003   # webhook az n8n-nek, mintha a CI bukott volna
+uv run uvicorn mock_ci.app:app --port 9000        # mock CI Docker nélkül (n8n Docker nélkül: npx n8n)
 ```
 
 **Kulcs nélküli füstteszt:** `uv run uvicorn scripts.fake_llm:app --port 9100`, majd
 `OPENAI_BASE_URL=http://localhost:9100/v1 OPENAI_API_KEY=fake LLM_MODEL=fake-model`. A fake LLM nem gondolkodik,
 csak végigviszi a csővezetéket: arra jó, hogy kiderüljön, minden komponens beszél-e a többivel.
 
-> Az `uv run pytest` a skeletonnal **részben piros** (23 piros, 18 zöld): az MCP szerződés-tesztek addig buknak,
-> amíg a `ci_tools_mcp` nincs kész. Ez szándékos – ez a csapat haladásjelzője. Kész: 41/41.
 
 ## Mappák
 
