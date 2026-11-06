@@ -1,4 +1,5 @@
 ---
+name: capstone-agent
 description: "Capstone – Agent szerep: egy keretrendszer befejezése és mérése"
 agent: agent
 ---

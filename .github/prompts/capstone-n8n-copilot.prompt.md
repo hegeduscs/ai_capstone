@@ -1,4 +1,5 @@
 ---
+name: capstone-n8n-copilot
 description: "Capstone – n8n + Copilot szerep: a flow végigfut, a Copilot custom agent diagnosztizál"
 agent: agent
 ---

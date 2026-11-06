@@ -43,15 +43,16 @@ Ez a kiindulópont. A baseline egy fix workflow egyetlen LLM-hívással – ezt 
 
 ## 2. A szereped – a Copilot végigvezet
 
-Minden szerephez van egy kész Copilot-prompt a `.github/prompts/` alatt. VS Code-ban a Copilot Chatbe (Agent mód)
-írd be a nevét perjellel; Copilot CLI-ben kérd így: *„Olvasd el és hajtsd végre: .github/prompts/mcp.prompt.md”*.
+Minden szerephez van egy kész Copilot-prompt a `.github/prompts/` alatt. VS Code Copilot Chatben (Agent mód) írd be
+a nevét perjellel, pl. `/capstone-mcp` (a `/mcp`, `/agent` beépített parancsok, ezért kapták a `capstone-` előtagot).
+Copilot CLI-ben vagy ha a parancs nem jelenik meg: *„Olvasd el és hajtsd végre: .github/prompts/capstone-mcp.prompt.md”*.
 
 | Szerep | Copilot | Mit épít | Kész, ha |
 |---|---|---|---|
-| **MCP** | `/mcp` | a hiányzó toolok a `ci_tools_mcp/server.py`-ban (6 read, 2 write, dry-run) | `uv run pytest -m "not level2"` → 32 passed, és pusholva (13:45) |
-| **Agent** | `/agent` | egy keretrendszer (`langgraph` / `llamaindex` / `smolagents`) befejezése, prompt, rövid ADR | a saját agent evalja jobb a baseline-nál, ideálisan DoD ✅ |
-| **n8n + Copilot** | `/n8n-copilot` | az n8n starter flow importja és próbája; a Copilot Build Doctor agent | egy szimulált hiba végigmegy az n8n-ben; a Copilot bizonyítékkal válaszol |
-| **V&V** | `/vv` | mérés minden lépés után (`docs/MERESEK.md`), SPEC, 2 saját teszt, agent card | a DoD-táblázat és az agent card kész |
+| **MCP** | `/capstone-mcp` | a hiányzó toolok a `ci_tools_mcp/server.py`-ban (6 read, 2 write, dry-run) | `uv run pytest -m "not level2"` → 32 passed, és pusholva (13:45) |
+| **Agent** | `/capstone-agent` | egy keretrendszer (`langgraph` / `llamaindex` / `smolagents`) befejezése, prompt, rövid ADR | a saját agent evalja jobb a baseline-nál, ideálisan DoD ✅ |
+| **n8n + Copilot** | `/capstone-n8n-copilot` | az n8n starter flow importja és próbája; a Copilot Build Doctor agent | egy szimulált hiba végigmegy az n8n-ben; a Copilot bizonyítékkal válaszol |
+| **V&V** | `/capstone-vv` | mérés minden lépés után (`docs/MERESEK.md`), SPEC, 2 saját teszt, agent card | a DoD-táblázat és az agent card kész |
 
 3 fős csapatnál az n8n + Copilot és a V&V összevonható.
 

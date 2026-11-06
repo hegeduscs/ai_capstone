@@ -33,7 +33,7 @@ Capstone projekt: agentic asszisztens, ami elbukott CI futások okát deríti ki
 - Force push, vagy egy másik szerep fájljainak módosítása (lásd lent).
 
 ## Szerepek – ki melyik fájlon dolgozik
-A felhasználó megmondja a szerepét (vagy elindítja a szerephez tartozó promptot: `.github/prompts/<szerep>.prompt.md`).
+A felhasználó megmondja a szerepét (vagy elindítja a szerephez tartozó promptot: `.github/prompts/capstone-<szerep>.prompt.md`).
 Csak az adott szerep fájljait módosítsd. Ha másik szerep fájlja is változna, állj meg és kérdezz.
 
 | Szerep | Fájlok | Feladat (ma: 1. szint) |

@@ -47,15 +47,15 @@ uv run python -m eval.run_eval --impl baseline              # vége: „Definiti
 ### 2. Innen szerepenként – a Copilot végigvezet
 
 Ma az **1. szint** a cél (kb. 1 óra). Minden szerephez kész Copilot-prompt van a `.github/prompts/` alatt:
-VS Code Copilot Chat (Agent mód) → `/mcp`, `/agent`, `/n8n-copilot` vagy `/vv`. A git-munkát (pull, commit, push)
+VS Code Copilot Chat (Agent mód) → `/capstone-mcp`, `/capstone-agent`, `/capstone-n8n-copilot` vagy `/capstone-vv`. A git-munkát (pull, commit, push)
 is a Copilot végzi az `AGENTS.md` szerint. Részletek: [`UTMUTATO.md`](UTMUTATO.md).
 
 | Szerep | Copilot | Kész, ha |
 |---|---|---|
-| **MCP** | `/mcp` | `uv run pytest -m "not level2"` → 32 passed, pusholva |
-| **Agent** | `/agent` | a saját agent evalja jobb a baseline-nál |
-| **n8n + Copilot** | `/n8n-copilot` | egy szimulált hiba végigmegy az n8n-ben |
-| **V&V** | `/vv` | DoD-táblázat, 2 saját teszt, agent card |
+| **MCP** | `/capstone-mcp` | `uv run pytest -m "not level2"` → 32 passed, pusholva |
+| **Agent** | `/capstone-agent` | a saját agent evalja jobb a baseline-nál |
+| **n8n + Copilot** | `/capstone-n8n-copilot` | egy szimulált hiba végigmegy az n8n-ben |
+| **V&V** | `/capstone-vv` | DoD-táblázat, 2 saját teszt, agent card |
 
 Ha valaki módosítja és pusholja az MCP szervert: `git pull`, majd az 1. terminálban Ctrl+C és újraindítás.
 

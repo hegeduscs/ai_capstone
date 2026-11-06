@@ -29,7 +29,7 @@ kitalálja, mi történt. Ezt szeretnénk egy **agentic fejlesztői asszisztensr
 | **n8n + Copilot** | az n8n flow (webhook → agent → issue vagy review sor), a Copilot Build Doctor agent | egy szimulált hiba végigmegy; a Copilot bizonyítékkal válaszol |
 | **V&V** | mérés minden lépés után, 2 saját teszt, agent card | DoD-táblázat és agent card |
 
-Minden szerephez kész Copilot-prompt van (`/mcp`, `/agent`, `/n8n-copilot`, `/vv`), a git-munkát is a Copilot végzi
+Minden szerephez kész Copilot-prompt van (`/capstone-mcp`, `/capstone-agent`, `/capstone-n8n-copilot`, `/capstone-vv`), a git-munkát is a Copilot végzi
 az `AGENTS.md` szerint.
 
 ## Definition of Done – mikor vagytok kész?

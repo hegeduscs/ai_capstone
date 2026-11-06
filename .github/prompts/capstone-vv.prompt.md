@@ -1,4 +1,5 @@
 ---
+name: capstone-vv
 description: "Capstone – V&V szerep: mérés minden lépés után, saját tesztek, agent card"
 agent: agent
 ---

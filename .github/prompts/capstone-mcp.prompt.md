@@ -1,4 +1,5 @@
 ---
+name: capstone-mcp
 description: "Capstone – MCP szerep: a ci-tools MCP szerver 1. szintje"
 agent: agent
 ---
